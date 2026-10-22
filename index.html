@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<!-- INTERDIT À GOOGLE D'INDEXER CETTE PAGE GITHUB DANS LES MOTEURS DE RECHERCHE -->
+<meta name="robots" content="noindex, nofollow">
+
+<title>ApérOSAE – Les Équipages</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Lato:wght@400;700;900&display=swap');
+
+:root {
+  --ink: #12284c;
+  --muted: #4a5b78;
+  --paper: #ffffff;
+  --line: #e3e8f0;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0; padding: 12px;
+  font-family: 'Lato', Arial, sans-serif;
+  color: var(--ink); background: transparent;
+}
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+  max-width: 980px; margin: 0 auto;
+}
+@media (max-width: 600px) { .grid { grid-template-columns: 1fr; } }
+
+.card {
+  display: flex; flex-direction: column;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 14px; overflow: hidden;
+}
+.banner {
+  background: var(--c2); color: var(--on);
+  padding: 22px 24px 20px;
+}
+.banner h2 { margin: 0; font-size: 1.45rem; font-weight: 900; line-height: 1.15; }
+
+.body { flex: 1; display: flex; flex-direction: column; padding: 20px 24px 24px; text-align: left; }
+.desc { margin: 0 0 12px; line-height: 1.55; font-size: .95rem; color: var(--muted);
+  text-align: justify; hyphens: auto; -webkit-hyphens: auto; }
+.captain { margin: 0 0 18px; font-size: .95rem; }
+.captain strong { font-weight: 900; }
+
+.date-box {
+  margin-top: auto; margin-bottom: 18px;
+  border: 2px solid var(--c2); border-radius: 10px;
+  padding: 12px 14px; background: var(--c1-soft);
+}
+.badge {
+  display: inline-block; background: var(--c2); color: var(--on);
+  font-weight: 900; font-size: .8rem; letter-spacing: .02em;
+  padding: 3px 10px; border-radius: 99px; margin-bottom: 8px;
+}
+.date  { margin: 0; font-weight: 900; font-size: 1.05rem; }
+.where { margin: 2px 0 0; font-size: .9rem; color: var(--muted); }
+.date.tbd { font-weight: 700; color: var(--muted); }
+
+.note { margin: 0 0 14px; font-size: .85rem; font-weight: 700; text-align: justify; }
+.btn {
+  display: block; text-align: center; text-decoration: none;
+  background: var(--c2); color: var(--on); font-weight: 900;
+  padding: 13px 16px; border-radius: 10px; font-size: .95rem;
+  transition: filter .15s;
+}
+.btn:hover { filter: brightness(.92); }
+.btn:focus-visible { outline: 3px solid var(--ink); outline-offset: 2px; }
+</style>
+</head>
+<body>
+
+<div class="grid" id="grid"></div>
+
+<script>
+/* =====================================================================
+   1) RÉGLAGES — à faire une seule fois
+   ===================================================================== */
+
+const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRXE9O4Yhqwj9OHbR3ka0UaLNrKANzvQmApIm9uNAT7kJJWGneQWeA4Q_pnMfPoglSNMS2iiUNYBCrK/pub?output=csv";
+const DEFAULT_LINK = "https://VOTRE-LIEN-ASSOCONNECT";
+
+/* =====================================================================
+   2) ÉQUIPAGES — textes fixes (modifiés rarement)
+   ===================================================================== */
+const EQUIPAGES = [
+  { id: "paris", ville: "Paris",
+    nom: "L’Équipage Parisien",
+    desc: "Ancré au cœur de la capitale, cet Équipage réunit la communauté OSAE autour d’un verre pour échanger, se retrouver et faire de nouvelles rencontres.",
+    commandant: "Pierre LI CAVOLI",
+    c1: "#f6c6c6", c2: "#c8102e", on: "#ffffff" },
+  { id: "toulouse", ville: "Toulouse",
+    nom: "L’Équipage Toulousain",
+    desc: "Ancré au cœur de la ville rose, cet Équipage réunit la communauté OSAE des grands acteurs et PME de la région. Garanti 100 % team chocolatine !",
+    commandant: "Raphaël FLOR",
+    c1: "#f9c9ea", c2: "#d6409f", on: "#ffffff" },
+  { id: "cannes", ville: "Cannes",
+    nom: "L’Équipage Cannois",
+    desc: "Ancré sur la Côte d’Azur, cet Équipage réunit la communauté OSAE autour d’un ApérOSAE les pieds dans le sable.",
+    commandant: "Térence BAUGÉ",
+    c1: "#fdeea0", c2: "#f5c518", on: "#12284c" },
+  { id: "marseille", ville: "Marseille",
+    nom: "L’Équipage Marseillais",
+    desc: "Ancré en terre provençale pour rassembler les scientifiques, ingénieurs et anciens du Master. Le cocktail idéal : des discussions passionnées et un ApérOSAE sous le soleil !",
+    commandant: "Dimitri DELAMOYE",
+    c1: "#c3cde3", c2: "#14295c", on: "#ffffff" }
+];
+
+/* =====================================================================
+   3) DATES DE SECOURS — utilisées si le Sheet est vide ou indisponible
+   ===================================================================== */
+const FALLBACK = {
+  paris:     { date: "", heure: "", lieu: "", lien: "" },
+  toulouse:  { date: "", heure: "", lieu: "", lien: "" },
+  cannes:    { date: "", heure: "", lieu: "", lien: "" },
+  marseille: { date: "", heure: "", lieu: "", lien: "" }
+};
+
+/* =====================================================================
+   Code d'affichage
+   ===================================================================== */
+function norm(s) {
+  return (s || "").toString().trim().toLowerCase()
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+}
+
+function parseCSV(text) {
+  const sep = text.split("\n")[0].includes(";") ? ";" : ",";
+  const rows = []; let row = [], cur = "", q = false;
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i];
+    if (q) {
+      if (ch === '"' && text[i + 1] === '"') { cur += '"'; i++; }
+      else if (ch === '"') q = false;
+      else cur += ch;
+    } else if (ch === '"') q = true;
+    else if (ch === sep) { row.push(cur); cur = ""; }
+    else if (ch === "\n" || ch === "\r") {
+      if (ch === "\r" && text[i + 1] === "\n") i++;
+      row.push(cur); rows.push(row); row = []; cur = "";
+    } else cur += ch;
+  }
+  if (cur || row.length) { row.push(cur); rows.push(row); }
+  return rows;
+}
+
+async function loadSheet() {
+  if (!SHEET_CSV_URL) return {};
+  try {
+    const res = await fetch(SHEET_CSV_URL, { cache: "no-store" });
+    if (!res.ok) throw new Error(res.status);
+    const rows = parseCSV(await res.text());
+    const head = rows.shift().map(norm);
+    const out = {};
+    rows.forEach(r => {
+      const o = {};
+      head.forEach((h, i) => o[h] = (r[i] || "").trim());
+      if (o.ville) out[norm(o.ville)] = o;
+    });
+    return out;
+  } catch (e) {
+    console.warn("Google Sheet indisponible, valeurs de secours utilisées.", e);
+    return {};
+  }
+}
+
+function el(tag, cls, text) {
+  const n = document.createElement(tag);
+  if (cls) n.className = cls;
+  if (text) n.textContent = text;
+  return n;
+}
+
+function render(data) {
+  const grid = document.getElementById("grid");
+  grid.innerHTML = "";
+  EQUIPAGES.forEach(e => {
+    const d = Object.assign({}, FALLBACK[e.id], data[norm(e.ville)] || {});
+    const card = el("article", "card");
+    card.style.setProperty("--c1", e.c1);
+    card.style.setProperty("--c2", e.c2);
+    card.style.setProperty("--on", e.on);
+    card.style.setProperty("--c1-soft", e.c1 + "55");
+
+    const banner = el("div", "banner");
+    banner.appendChild(el("h2", "", e.nom));
+    card.appendChild(banner);
+
+    const body = el("div", "body");
+    body.appendChild(el("p", "desc", e.desc));
+
+    const cap = el("p", "captain", "Son Commandant de bord est ");
+    cap.appendChild(el("strong", "", e.commandant));
+    cap.append(".");
+    body.appendChild(cap);
+
+    const box = el("div", "date-box");
+    box.appendChild(el("span", "badge", "Save the date"));
+    if (d.date) {
+      const when = d.heure ? d.date + " à " + d.heure : d.date;
+      box.appendChild(el("p", "date", when));
+      if (d.lieu) box.appendChild(el("p", "where", d.lieu));
+    } else {
+      box.appendChild(el("p", "date tbd", "Prochaine date à venir"));
+    }
+    body.appendChild(box);
+
+    body.appendChild(el("p", "note", "Pour participer, l’inscription préalable est obligatoire."));
+
+    const a = el("a", "btn", "JE M’INSCRIS !");
+    a.href = d.lien || DEFAULT_LINK;
+    a.target = "_blank";
+    a.rel = "noopener";
+    body.appendChild(a);
+
+    card.appendChild(body);
+    grid.appendChild(card);
+  });
+}
+
+render({});
+loadSheet().then(data => { if (Object.keys(data).length) render(data); });
+</script>
+</body>
+</html>

@@ -28,7 +28,7 @@ body {
    quelle que soit la largeur réelle de l'iframe / du bloc d'intégration */
 .grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 20px;
   width: 100%;
   max-width: 980px; margin: 0 auto;
@@ -277,7 +277,7 @@ function render(data) {
 /* Envoie la hauteur réelle au site parent (ignoré si le site ne l'écoute pas) */
 function sendHeight() {
   try {
-    const h = document.documentElement.scrollHeight;
+    const h = Math.ceil(document.body.getBoundingClientRect().height);
     window.parent.postMessage({ type: "aperosae-height", height: h }, "*");
   } catch (e) {}
 }

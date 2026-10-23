@@ -50,8 +50,8 @@ body {
   .tab[aria-selected="true"] { background: var(--c2); color: var(--on); }
   .tab:focus-visible { outline: 3px solid var(--ink); outline-offset: 2px; }
   .grid { display: block; }
-  .card { display: none; }
-  .card.active { display: flex; }
+  .grid > .card:not(.active) { display: none !important; }
+  .grid > .card.active { display: flex !important; }
 }
 
 .card {

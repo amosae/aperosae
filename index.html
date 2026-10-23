@@ -34,25 +34,24 @@ body {
   max-width: 980px; margin: 0 auto;
 }
 
-.hint { display: none; margin: 0 0 8px; text-align: center; font-size: .85rem; font-weight: 700; color: var(--muted); }
+.tabs { display: none; }
 
-/* Mobile : carrousel horizontal (balayage). La hauteur totale reste celle
-   d'UNE seule carte, donc le bloc ne déborde plus sur le reste du site. */
+/* Mobile : onglets (un clic = une carte). Pas de balayage nécessaire,
+   et la hauteur totale reste celle d'UNE seule carte + la barre d'onglets. */
 @media (max-width: 640px) {
-  .hint { display: block; }
-  .grid {
-    display: flex;
-    overflow-x: auto;
-    scroll-snap-type: x mandatory;
-    -webkit-overflow-scrolling: touch;
-    gap: 14px;
-    padding: 2px 2px 12px;
-    align-items: stretch;
+  .tabs { display: flex; gap: 6px; margin: 0 0 12px; }
+  .tab {
+    flex: 1; min-width: 0;
+    border: 2px solid var(--c2); background: #fff; color: var(--ink);
+    font: inherit; font-weight: 900; font-size: .78rem;
+    padding: 10px 2px; border-radius: 99px; cursor: pointer;
+    touch-action: manipulation;
   }
-  .card {
-    flex: 0 0 86%;
-    scroll-snap-align: center;
-  }
+  .tab[aria-selected="true"] { background: var(--c2); color: var(--on); }
+  .tab:focus-visible { outline: 3px solid var(--ink); outline-offset: 2px; }
+  .grid { display: block; }
+  .card { display: none; }
+  .card.active { display: flex; }
 }
 
 .card {
@@ -101,7 +100,7 @@ body {
 </head>
 <body>
 
-<p class="hint">Faites glisser pour découvrir les 4 Équipages</p>
+<div class="tabs" id="tabs" role="tablist" aria-label="Choisir un Équipage"></div>
 <div class="grid" id="grid"></div>
 
 <script>
@@ -203,10 +202,23 @@ function el(tag, cls, text) {
   return n;
 }
 
+let current = 0;
+
 function render(data) {
   const grid = document.getElementById("grid");
+  const tabs = document.getElementById("tabs");
   grid.innerHTML = "";
-  EQUIPAGES.forEach(e => {
+  tabs.innerHTML = "";
+  const cards = [], tabBtns = [];
+
+  function select(i) {
+    current = i;
+    cards.forEach((c, k) => c.classList.toggle("active", k === i));
+    tabBtns.forEach((b, k) => b.setAttribute("aria-selected", k === i ? "true" : "false"));
+    sendHeight();
+  }
+
+  EQUIPAGES.forEach((e, i) => {
     const d = Object.assign({}, FALLBACK[e.id], data[norm(e.ville)] || {});
     const card = el("article", "card");
     card.style.setProperty("--c1", e.c1);
@@ -247,7 +259,19 @@ function render(data) {
 
     card.appendChild(body);
     grid.appendChild(card);
+    cards.push(card);
+
+    const tab = el("button", "tab", e.ville);
+    tab.type = "button";
+    tab.setAttribute("role", "tab");
+    tab.style.setProperty("--c2", e.c2);
+    tab.style.setProperty("--on", e.on);
+    tab.addEventListener("click", () => select(i));
+    tabs.appendChild(tab);
+    tabBtns.push(tab);
   });
+
+  select(current);
 }
 
 /* Envoie la hauteur réelle au site parent (ignoré si le site ne l'écoute pas) */

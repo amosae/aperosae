@@ -16,21 +16,48 @@
 
 * { box-sizing: border-box; }
 
+html, body { max-width: 100%; overflow-x: hidden; }
+
 body {
   margin: 0; padding: 12px;
   font-family: 'Lato', Arial, sans-serif;
   color: var(--ink); background: transparent;
 }
+
+/* Grille responsive : 2 colonnes si la place le permet, sinon 1 colonne,
+   quelle que soit la largeur réelle de l'iframe / du bloc d'intégration */
 .grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
   gap: 20px;
+  width: 100%;
   max-width: 980px; margin: 0 auto;
 }
-@media (max-width: 600px) { .grid { grid-template-columns: 1fr; } }
+
+.hint { display: none; margin: 0 0 8px; text-align: center; font-size: .85rem; font-weight: 700; color: var(--muted); }
+
+/* Mobile : carrousel horizontal (balayage). La hauteur totale reste celle
+   d'UNE seule carte, donc le bloc ne déborde plus sur le reste du site. */
+@media (max-width: 640px) {
+  .hint { display: block; }
+  .grid {
+    display: flex;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    gap: 14px;
+    padding: 2px 2px 12px;
+    align-items: stretch;
+  }
+  .card {
+    flex: 0 0 86%;
+    scroll-snap-align: center;
+  }
+}
 
 .card {
   display: flex; flex-direction: column;
+  min-width: 0;
   background: var(--paper);
   border: 1px solid var(--line);
   border-radius: 14px; overflow: hidden;
@@ -43,7 +70,7 @@ body {
 
 .body { flex: 1; display: flex; flex-direction: column; padding: 20px 24px 24px; text-align: left; }
 .desc { margin: 0 0 12px; line-height: 1.55; font-size: .95rem; color: var(--muted);
-  text-align: justify; hyphens: auto; -webkit-hyphens: auto; }
+  text-align: justify; hyphens: auto; -webkit-hyphens: auto; overflow-wrap: break-word; }
 .captain { margin: 0 0 18px; font-size: .95rem; }
 .captain strong { font-weight: 900; }
 
@@ -74,6 +101,7 @@ body {
 </head>
 <body>
 
+<p class="hint">Faites glisser pour découvrir les 4 Équipages</p>
 <div class="grid" id="grid"></div>
 
 <script>
@@ -221,6 +249,17 @@ function render(data) {
     grid.appendChild(card);
   });
 }
+
+/* Envoie la hauteur réelle au site parent (ignoré si le site ne l'écoute pas) */
+function sendHeight() {
+  try {
+    const h = document.documentElement.scrollHeight;
+    window.parent.postMessage({ type: "aperosae-height", height: h }, "*");
+  } catch (e) {}
+}
+window.addEventListener("load", sendHeight);
+window.addEventListener("resize", sendHeight);
+if (window.ResizeObserver) new ResizeObserver(sendHeight).observe(document.body);
 
 render({});
 loadSheet().then(data => { if (Object.keys(data).length) render(data); });

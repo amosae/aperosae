@@ -24,34 +24,26 @@ body {
   color: var(--ink); background: transparent;
 }
 
-/* Grille responsive : 2 colonnes si la place le permet, sinon 1 colonne,
-   quelle que soit la largeur réelle de l'iframe / du bloc d'intégration */
-.grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 20px;
-  width: 100%;
-  max-width: 980px; margin: 0 auto;
+/* Une seule carte affichée à la fois, centrée */
+.grid { display: block; width: 100%; max-width: 640px; margin: 0 auto; }
+
+/* Onglets (PC et mobile) : un clic = une carte affichée */
+.tabs { display: flex; gap: 8px; margin: 0 auto 14px; max-width: 640px; }
+.tab {
+  flex: 1; min-width: 0;
+  border: 2px solid var(--c2); background: #fff; color: var(--ink);
+  font: inherit; font-weight: 900; font-size: .95rem;
+  padding: 11px 6px; border-radius: 99px; cursor: pointer;
+  touch-action: manipulation; transition: filter .15s;
 }
-
-.tabs { display: none; }
-
-/* Mobile : onglets (un clic = une carte). Pas de balayage nécessaire,
-   et la hauteur totale reste celle d'UNE seule carte + la barre d'onglets. */
+.tab:hover { filter: brightness(.95); }
+.tab[aria-selected="true"] { background: var(--c2); color: var(--on); }
+.tab:focus-visible { outline: 3px solid var(--ink); outline-offset: 2px; }
+.grid > .card:not(.active) { display: none !important; }
+.grid > .card.active { display: flex !important; }
 @media (max-width: 640px) {
-  .tabs { display: flex; gap: 6px; margin: 0 0 12px; }
-  .tab {
-    flex: 1; min-width: 0;
-    border: 2px solid var(--c2); background: #fff; color: var(--ink);
-    font: inherit; font-weight: 900; font-size: .78rem;
-    padding: 10px 2px; border-radius: 99px; cursor: pointer;
-    touch-action: manipulation;
-  }
-  .tab[aria-selected="true"] { background: var(--c2); color: var(--on); }
-  .tab:focus-visible { outline: 3px solid var(--ink); outline-offset: 2px; }
-  .grid { display: block; }
-  .grid > .card:not(.active) { display: none !important; }
-  .grid > .card.active { display: flex !important; }
+  .tabs { gap: 6px; margin-bottom: 12px; }
+  .tab { font-size: .78rem; padding: 10px 2px; }
 }
 
 .card {

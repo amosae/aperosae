@@ -105,27 +105,24 @@ const DEFAULT_LINK = "https://VOTRE-LIEN-ASSOCONNECT";
 
 /* =====================================================================
    2) ÉQUIPAGES — textes fixes (modifiés rarement)
+   Le Commandant de bord est lu dans la colonne "Commandant de bord" du Sheet.
    ===================================================================== */
 const EQUIPAGES = [
   { id: "paris", ville: "Paris",
     nom: "L’Équipage Parisien",
     desc: "Au plus proche du berceau d'OSAE, cet Équipage rassemble les alumni et étudiants présents dans les laboratoires de recherche, les start-ups et les institutions d'Île-de-France !",
-    commandant: "Pierre LI CAVOLI",
     c1: "#f6c6c6", c2: "#c8102e", on: "#ffffff" },
   { id: "toulouse", ville: "Toulouse",
     nom: "L’Équipage Toulousain",
     desc: "Ancré au cœur de la ville rose, cet Équipage réunit la communauté OSAE des grands acteurs et PME de la région. Garanti 100 % team chocolatine !",
-    commandant: "Raphaël FLOR",
     c1: "#f9c9ea", c2: "#d6409f", on: "#ffffff" },
   { id: "cannes", ville: "Cannes",
     nom: "L’Équipage Cannois",
     desc: "Le rendez-vous des diplômés OSAE du bassin azuréen. Entre deux projets d'ingénierie spatiale, on s'y retrouve pour un verre au bord de l'eau avec un filet d'huile d'olive !",
-    commandant: "Dimitri DELAMOYE",
     c1: "#fdeea0", c2: "#f5c518", on: "#12284c" },
   { id: "marseille", ville: "Marseille",
     nom: "L’Équipage Marseillais",
     desc: "Situé en terre provençale pour rassembler les anciens du Master. Le cocktail idéal : des discussions passionnées et un ApérOSAE sous le soleil !",
-    commandant: "Dimitri DELAMOYE",
     c1: "#c3cde3", c2: "#14295c", on: "#ffffff" }
 ];
 
@@ -225,10 +222,13 @@ function render(data) {
     const body = el("div", "body");
     body.appendChild(el("p", "desc", e.desc));
 
-    const cap = el("p", "captain", "Son Commandant de bord est ");
-    cap.appendChild(el("strong", "", e.commandant));
-    cap.append(".");
-    body.appendChild(cap);
+    const nomCommandant = d["commandant de bord"];
+    if (nomCommandant) {
+      const cap = el("p", "captain", "Son Commandant de bord est ");
+      cap.appendChild(el("strong", "", nomCommandant));
+      cap.append(".");
+      body.appendChild(cap);
+    }
 
     const box = el("div", "date-box");
     box.appendChild(el("span", "badge", "Save the date"));
